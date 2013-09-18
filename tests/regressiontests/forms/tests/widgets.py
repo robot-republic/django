@@ -1112,9 +1112,16 @@ class LiveWidgetTests(AdminSeleniumWebDriverTestCase):
         self.selenium.get('%s%s' % (self.live_server_url,
             reverse('article_form', args=[article.pk])))
         self.selenium.find_element_by_id('submit').submit()
+        self.wait_page_loaded()
         article = Article.objects.get(pk=article.pk)
         # Should be "\nTst\n" after #19251 is fixed
         self.assertEqual(article.content, "\r\nTst\r\n")
+        # So now it's becoming obscure; we do have threading issues here, so this
+        # test fails sometimes for sqlite, I could only ever witness it on jenkins.
+        # As long as 1.5 is supported we manually "fix" this test by quitting
+        # selenium. No idea why closing the browser window isn't enough, but hey…
+        self.selenium.quit()
+        delattr(self.__class__, 'selenium')
 
 
 @python_2_unicode_compatible
